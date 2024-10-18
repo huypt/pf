@@ -13,14 +13,12 @@
 #include "search.h"
 #include "uci.h"
 #include "thread.h"
-#include "pawn.h"
-#include "psqt.h"
 
 using namespace Stockfish;
 
 @interface PikafishLib : NSObject
--(void) init: (double) skill : (double) time;
--(void) init: (double) skill : (double) time : (const char*) customFEN;
+-(void) init: (double) skill : (double) time : (const char*) path;
+-(void) init: (double) skill : (double) time : (const char*) customFEN : (const char*) path;
 -(void) setPosition : (const char*) fen;
 -(void) callMove: (int) from : (int) to;
 -(int) searchMove;
@@ -34,76 +32,73 @@ using namespace Stockfish;
     Position _pos;
     StateListPtr _states;
     std::deque<Move> _moveHistory;
+    std::unique_ptr<UCIEngine> uci;  // Smart pointer to UCIEngine
 }
--(void) init: (double) skill : (double) time;
+-(void) init: (double) skill : (double) time : (const char*) path;
 {
-    UCI::init(Options, skill, time);
-    PSQT::init();
     Bitboards::init();
     Position::init();
-    Bitbases::init(); //unable to figure out
-    Search::init(); //unable to figure out
-    Pawns::init(); //unable to figure out
-    Threads.set(Options["Threads"]);
-    Search::clear(); // After threads are up
 
-    UCI::init(_pos, _states);
+    uci = std::make_unique<UCIEngine>(path);
+    
+    Tune::init(uci->engine_options());
+    
+    uci->new_game(_pos, _states, _moveHistory);
+    uci->init(_pos, _states);
     std::cout << "created stockfish instance skill : " << skill << " time : " << time << "\n";
 }
 
--(void) init: (double) skill : (double) time : (const char*) customFEN;
+-(void) init: (double) skill : (double) time : (const char*) customFEN  : (const char*) path;
 {
-    UCI::init(Options, skill, time);
-    PSQT::init();
     Bitboards::init();
     Position::init();
-    Bitbases::init(); //unable to figure out
-    Search::init(); //unable to figure out
-    Pawns::init(); //unable to figure out
-    Threads.set(Options["Threads"]);
-    Search::clear(); // After threads are up
 
-    UCI::init(_pos, _states, customFEN);
+    uci = std::make_unique<UCIEngine>(path);
+    
+    Tune::init(uci->engine_options());
+    
+    uci->new_game(_pos, _states, _moveHistory);
+    uci->init(_pos, _states, customFEN);
     std::cout << "created stockfish instance skill : " << skill << " time : " << time << "\n";
 }
 
 //didn't use, might not be able to use this raw
 -(void) setPosition : (const char*) fen
 {
-    UCI::set_position(_pos, _states, fen);
+    uci->set_position(_pos, _states, fen);
 }
 
 -(void) callMove: (int) from : (int) to
 {
-    UCI::init_move(from, to, _pos, _moveHistory);
+    uci->init_move(from, to, _pos, _moveHistory);
 }
 
 -(int) searchMove
 {
-    Move m = UCI::think(_pos, _moveHistory);
+    Move m = uci->think(_pos, _moveHistory);
 
-    return (m);
+    return m.raw();
 }
 
 -(void) undoMove
 {
-    UCI::undo_move(_pos, _moveHistory);
+    uci->undo_move(_pos, _moveHistory);
 }
 
 -(void) newGame
 {
-    UCI::new_game(_pos, _states, _moveHistory);
+    uci->new_game(_pos, _states, _moveHistory);
 }
 
 -(bool) drawCheck
 {
-    bool draw = UCI::is_game_draw(_pos);
+    bool draw = uci->is_game_draw(_pos);
     return draw;
 }
 
 -(void) releaseResource
 {
-    UCI::release_resources(_pos);
+    uci->release_resources(_pos);
 }
 @end
 
@@ -111,14 +106,14 @@ extern "C"
 {
     PikafishLib *ai = [[PikafishLib alloc] init];
 
-    void cpp_init_pikafish(double skill, double time)
+    void cpp_init_pikafish(double skill, double time, const char* path)
     {
-        [ai init:skill :time];
+        [ai init:skill :time :path];
     }
 
-    void cpp_init_custom_pikafish(double skill, double time, const char* customFEN)
+    void cpp_init_custom_pikafish(double skill, double time, const char* customFEN, const char* path)
     {
-        [ai init:skill :time :customFEN];
+        [ai init:skill :time :customFEN :path];
     }
 
     void cpp_set_position(std::string fen)
