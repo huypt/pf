@@ -16,6 +16,8 @@
 #include "pawn.h"
 #include "psqt.h"
 
+using namespace Stockfish;
+
 @interface PikafishLib : NSObject
 -(void) init: (double) skill : (double) time;
 -(void) init: (double) skill : (double) time : (const char*) customFEN;
