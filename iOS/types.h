@@ -38,6 +38,9 @@
 
     #include <cassert>
     #include <cstdint>
+    #ifdef __clang__
+        #include "absl/numeric/int128.h"
+    #endif
 
     #if defined(_MSC_VER)
         // Disable some silly and noisy warnings from MSVC compiler
@@ -112,8 +115,14 @@ constexpr bool Is64Bit = true;
 constexpr bool Is64Bit = false;
     #endif
 
+#ifdef __clang__
+using __uint128_t_ = absl::uint128;
+#else
+using __uint128_t_ = __uint128_t;
+#endif
+
 using Key      = uint64_t;
-using Bitboard = __uint128_t;
+using Bitboard = __uint128_t_;
 
 constexpr int MAX_MOVES = 128;
 constexpr int MAX_PLY   = 246;

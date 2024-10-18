@@ -349,9 +349,13 @@ inline Square lsb(Bitboard b) {
 
 #else  // Assumed gcc or compatible compiler
 
-    if (uint64_t(b))
-        return Square(__builtin_ctzll(b));
-    return Square(__builtin_ctzll(b >> 64) + 64);
+    #ifdef __clang__
+        return Square((int)b);
+    #else
+        if (uint64_t(b))
+            return Square(__builtin_ctzll(b));
+        return Square(__builtin_ctzll(b >> 64) + 64);
+    #endif
 
 #endif
 }
