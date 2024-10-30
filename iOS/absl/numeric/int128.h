@@ -336,8 +336,8 @@ constexpr uint128 operator>>(uint128 lhs, int amount);
 constexpr uint128 operator+(uint128 lhs, uint128 rhs);
 constexpr uint128 operator-(uint128 lhs, uint128 rhs);
 constexpr uint128 operator*(uint128 lhs, uint128 rhs);
-uint128 operator/(uint128 lhs, uint128 rhs);
-uint128 operator%(uint128 lhs, uint128 rhs);
+constexpr uint128 operator/(uint128 lhs, uint128 rhs);
+constexpr uint128 operator%(uint128 lhs, uint128 rhs);
 
 inline constexpr uint128& uint128::operator<<=(int amount) {
   *this = *this << amount;
