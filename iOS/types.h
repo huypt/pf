@@ -38,9 +38,6 @@
 
     #include <cassert>
     #include <cstdint>
-    #ifdef __clang__
-        #include "absl/numeric/int128.h"
-    #endif
 
     #if defined(_MSC_VER)
         // Disable some silly and noisy warnings from MSVC compiler
@@ -68,6 +65,8 @@
     #if defined(_MSC_VER) && !defined(__clang__)
         #include <__msvc_int128.hpp>  // Microsoft header for std::_Unsigned128
 using __uint128_t = std::_Unsigned128;
+    #else
+          #include "absl/numeric/int128.h"
     #endif
 
     #if defined(_WIN64) && defined(_MSC_VER)  // No Makefile used
@@ -115,14 +114,13 @@ constexpr bool Is64Bit = true;
 constexpr bool Is64Bit = false;
     #endif
 
-#ifdef __clang__
-using __uint128_t_ = absl::uint128;
-#else
-using __uint128_t_ = __uint128_t;
-#endif
-
 using Key      = uint64_t;
-using Bitboard = __uint128_t_;
+
+#if defined(_MSC_VER) && !defined(__clang__)
+using Bitboard = __uint128_t;
+#else
+using Bitboard = absl::uint128;
+#endif
 
 constexpr int MAX_MOVES = 128;
 constexpr int MAX_PLY   = 246;

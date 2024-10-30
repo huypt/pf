@@ -198,8 +198,8 @@ class
     return H::combine(std::move(h), Uint128High64(v), Uint128Low64(v));
   }
 public:
-  const uint64_t getLo() const { return lo_; };
-  const uint64_t getHi() const { return hi_; };
+  uint64_t getLo() const { return lo_; };
+  uint64_t getHi() const { return hi_; };
 
  private:
   constexpr uint128(uint64_t high, uint64_t low);
@@ -336,8 +336,8 @@ constexpr uint128 operator>>(uint128 lhs, int amount);
 constexpr uint128 operator+(uint128 lhs, uint128 rhs);
 constexpr uint128 operator-(uint128 lhs, uint128 rhs);
 constexpr uint128 operator*(uint128 lhs, uint128 rhs);
-constexpr uint128 operator/(uint128 lhs, uint128 rhs);
-constexpr uint128 operator%(uint128 lhs, uint128 rhs);
+//constexpr uint128 operator/(uint128 lhs, uint128 rhs);
+//constexpr uint128 operator%(uint128 lhs, uint128 rhs);
 
 inline constexpr uint128& uint128::operator<<=(int amount) {
   *this = *this << amount;
@@ -364,15 +364,15 @@ inline constexpr uint128& uint128::operator*=(uint128 other) {
   return *this;
 }
 
-inline constexpr uint128& uint128::operator/=(uint128 other) {
-  *this = *this / other;
-  return *this;
-}
+// inline constexpr uint128& uint128::operator/=(uint128 other) {
+//   *this = *this / other;
+//   return *this;
+// }
 
-inline constexpr uint128& uint128::operator%=(uint128 other) {
-  *this = *this % other;
-  return *this;
-}
+// inline constexpr uint128& uint128::operator%=(uint128 other) {
+//   *this = *this % other;
+//   return *this;
+// }
 
 constexpr uint64_t Uint128Low64(uint128 v) { return v.lo_; }
 

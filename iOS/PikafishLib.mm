@@ -39,7 +39,7 @@ using namespace Stockfish;
     Bitboards::init();
     Position::init();
 
-    uci = std::make_unique<UCIEngine>(path);
+    uci = std::make_unique<UCIEngine>(skill, time, path);
     
     Tune::init(uci->engine_options());
     
@@ -53,7 +53,7 @@ using namespace Stockfish;
     Bitboards::init();
     Position::init();
 
-    uci = std::make_unique<UCIEngine>(path);
+    uci = std::make_unique<UCIEngine>(skill, time, path);
     
     Tune::init(uci->engine_options());
     

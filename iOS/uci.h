@@ -38,7 +38,7 @@ using Value = int;
 
 class UCIEngine {
    public:
-    UCIEngine(const char* argv);
+    UCIEngine(double skill, double time, const char* argv);
 
     void init(Position& pos, StateListPtr& states);
     void init(Position& pos, StateListPtr& states, const char* customFEN);
