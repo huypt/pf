@@ -321,6 +321,10 @@ inline int popcount(Bitboard b) {
 
     return int(_mm_popcnt_u64(b._Word[1])) + int(_mm_popcnt_u64(b._Word[0]));
 
+#elif defined(ABSL_NUMERIC_INT128_H_)
+
+    return (int)absl::Uint128BitPopCount(b);
+
 #else  // Assumed gcc or compatible compiler
 
     return __builtin_popcountll(b >> 64) + __builtin_popcountll(b);
@@ -347,31 +351,20 @@ inline Square lsb(Bitboard b) {
         return Square(idx + 64);
     }
 
-#elif __cplusplus >= 202002L  // C++20-compatible compiler
-    if (static_cast<uint64_t>(b)) {  // Lower 64 bits
-        return Square(std::countr_zero(static_cast<uint64_t>(b)));
-    } else {  // Upper 64 bits
-        return Square(std::countr_zero(static_cast<uint64_t>(b >> 64)) + 64);
+#elif defined(ABSL_NUMERIC_INT128_H_)
+    
+    std::uint64_t low = absl::Uint128Low64(b);
+    std::uint64_t high = absl::Uint128High64(b);
+    if (low == 0 && high == 0) {
+        return Square(0); // Hoặc giá trị khác mà bạn muốn dùng để báo lỗi
     }
-
-#else  // Manual bit-shifting for older compilers
-    if (uint64_t lower = static_cast<uint64_t>(b); lower != 0) {  // Lower 64 bits
-        int pos = 0;
-        while ((lower & 1) == 0) {
-            lower >>= 1;
-            ++pos;
-        }
-        return Square(pos);
-    } else if (uint64_t upper = static_cast<uint64_t>(b >> 64); upper != 0) {  // Upper 64 bits
-        int pos = 0;
-        while ((upper & 1) == 0) {
-            upper >>= 1;
-            ++pos;
-        }
-        return Square(pos + 64);
-    }
-
-    return Square(0);  // Should never reach here if b is non-zero
+    unsigned long idx = (unsigned long)absl::Uint128BitScanForward(b);
+    return Square(idx);
+    
+#else
+    if (uint64_t(b))
+        return Square(__builtin_ctzll(b));
+    return Square(__builtin_ctzll(b >> 64) + 64);
 #endif
 }
 

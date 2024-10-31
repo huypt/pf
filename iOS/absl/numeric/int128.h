@@ -37,6 +37,11 @@
 #include "absl/base/macros.h"
 #include "absl/base/port.h"
 
+
+#ifndef CHAR_BIT
+  #define CHAR_BIT  __CHAR_BIT__
+#endif
+
 namespace absl {
 
 
@@ -175,6 +180,10 @@ class
   //
   // Returns the higher 64-bit value of a `uint128` value.
   friend constexpr uint64_t Uint128High64(uint128 v);
+
+  friend constexpr std::uint32_t Uint128BitScanForward64(std::uint64_t n) noexcept;
+  friend constexpr std::uint32_t Uint128BitScanForward(uint128 u) noexcept;
+  friend constexpr std::uint32_t Uint128BitPopCount(uint128 n) noexcept;
 
   // MakeUInt128()
   //
@@ -377,6 +386,56 @@ inline constexpr uint128& uint128::operator*=(uint128 other) {
 constexpr uint64_t Uint128Low64(uint128 v) { return v.lo_; }
 
 constexpr uint64_t Uint128High64(uint128 v) { return v.hi_; }
+
+constexpr std::uint32_t Uint128BitScanForward64(std::uint64_t n) noexcept {
+  constexpr std::uint32_t seq[] = {
+    0,  47, 1,  56, 48, 27, 2,  60, 57, 49, 41, 37, 28, 16, 3,  61,
+    54, 58, 35, 52, 50, 42, 21, 44, 38, 32, 29, 23, 17, 11, 4,  62,
+    46, 55, 26, 59, 40, 36, 15, 53, 34, 51, 20, 43, 31, 22, 10, 45,
+    25, 39, 14, 33, 19, 30, 9,  24, 13, 18, 8,  12, 7,  6,  5,  63};
+  return seq[((n ^ (n - 1)) * 0x03f79d71b4cb0a89ULL) >> 58];
+}
+
+constexpr std::uint32_t Uint128BitScanForward(uint128 u) noexcept {
+    std::uint64_t hi = absl::Uint128High64(u);
+    std::uint64_t lo = absl::Uint128Low64(u);
+    std::uint32_t lo_eq_0 = (lo == 0);
+    std::uint64_t hi_or_lo = lo_eq_0 ? hi : lo;
+    std::uint32_t bsf_hi_or_lo = absl::Uint128BitScanForward64(hi_or_lo);
+    return bsf_hi_or_lo + (lo_eq_0 << 6);
+}
+
+constexpr std::uint32_t Uint128BitPopCount(uint128 n) noexcept {
+  using K = std::uint64_t;
+  K lo = absl::Uint128Low64(n);
+  K hi = absl::Uint128High64(n);
+  std::uint32_t loValue = 0;
+  std::uint32_t hiValue = 0;
+    
+  {
+    constexpr K k0{~K{0} / (3)};
+    constexpr K k1{~K{0} / (15) * 3};
+    constexpr K k2{~K{0} / (255) * 15};
+    constexpr K k3{~K{0} / (255)};
+    lo = lo - ((lo >> 1) & k0);
+    lo = (lo & k1) + ((lo >> 2) & k1);
+    lo = (lo + (lo >> 4)) & k2;
+    loValue = (K{lo * k3} >> (sizeof(K) - 1) * CHAR_BIT);
+  }
+  {
+    constexpr K k0{~K{0} / (3)};
+    constexpr K k1{~K{0} / (15) * 3};
+    constexpr K k2{~K{0} / (255) * 15};
+    constexpr K k3{~K{0} / (255)};
+    hi = hi - ((hi >> 1) & k0);
+    hi = (hi & k1) + ((hi >> 2) & k1);
+    hi = (hi + (hi >> 4)) & k2;
+    hiValue = (K{hi * k3} >> (sizeof(K) - 1) * CHAR_BIT);
+  }
+    
+    return loValue + hiValue;
+}
+
 
 // Constructors from integer types.
 
